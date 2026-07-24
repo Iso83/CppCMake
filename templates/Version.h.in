@@ -1,0 +1,14 @@
+#pragma once
+
+#include <string_view>
+
+namespace @CPPCMAKE_NAMESPACE@ {
+inline constexpr std::string_view ProjectName = "@PROJECT_NAME@";
+inline constexpr std::string_view Version     = "@PROJECT_VERSION@";
+inline constexpr std::string_view GitBranch   = "@CPPCMAKE_GIT_BRANCH@";
+inline constexpr std::string_view GitHash     = "@CPPCMAKE_GIT_HASH@";
+
+inline constexpr int VersionMajor = @PROJECT_VERSION_MAJOR@;
+inline constexpr int VersionMinor = @PROJECT_VERSION_MINOR@;
+inline constexpr int VersionPatch = @PROJECT_VERSION_PATCH@;
+} // namespace @CPPCMAKE_NAMESPACE@

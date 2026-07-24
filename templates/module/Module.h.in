@@ -1,0 +1,11 @@
+#pragma once
+
+namespace @PROJECT_NAME@::@CPPCMAKE_MODULE_NAMESPACE@ {
+
+class @CPPCMAKE_MODULE_CLASS@
+{
+public:
+    @CPPCMAKE_MODULE_CLASS@() = default;
+};
+
+} // namespace @PROJECT_NAME@::@CPPCMAKE_MODULE_NAMESPACE@
