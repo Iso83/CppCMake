@@ -119,13 +119,16 @@ endfunction()
 # Public API
 # =========================================================
 
-function(cppcmake_dependency_make_available)
+macro(cppcmake_dependency_make_available)
     # =========================================================
     # Summary
     #
     # Executes FetchContent_MakeAvailable() and automatically
     # places newly created targets inside the project's
     # third_party IDE folder.
+    #
+    # Note:
+    #   Macro due to FetchContent_*_SOURCE_DIR variables.
     #
     # Usage:
     #
@@ -141,7 +144,7 @@ function(cppcmake_dependency_make_available)
     FetchContent_MakeAvailable(${ARGV})
 
     _cppcmake_dependency_organize_targets("${TARGETS_BEFORE}")
-endfunction()
+endmacro()
 
 function(cppcmake_dependency_add_subdirectory)
     # =========================================================
