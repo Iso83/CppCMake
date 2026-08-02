@@ -69,15 +69,27 @@ function(cppcmake_gitsubmodule_init)
     )
 
     if(NOT GITSUBMODULE_RESULT EQUAL 0)
-        message(FATAL_ERROR
-            "CPPCMAKE_GITSUBMODULE_REPOSITORY_INVALID: '${ARG_WORKING_DIRECTORY}' is not inside a Git repository."
-        )
+
+        if(NOT ARG_QUIET)
+            message(STATUS
+                "CppCMake: '${ARG_WORKING_DIRECTORY}' is not inside a Git repository. Git submodule initialization was skipped."
+            )
+        endif()
+
+        return()
+
     endif()
 
     if(NOT EXISTS "${GITSUBMODULE_GIT_ROOT}/.gitmodules")
-        message(FATAL_ERROR
-            "CPPCMAKE_GITSUBMODULE_GITMODULES_MISSING: '${GITSUBMODULE_GIT_ROOT}' does not contain a .gitmodules file."
-        )
+
+        if(NOT ARG_QUIET)
+            message(STATUS
+                "CppCMake: '${GITSUBMODULE_GIT_ROOT}' does not contain a .gitmodules file. Git submodule initialization was skipped."
+            )
+        endif()
+
+        return()
+
     endif()
 
     file(
