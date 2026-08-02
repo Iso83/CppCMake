@@ -35,6 +35,7 @@ add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_TARGET})
 # ============================================================================
 
 cppcmake_version_target(${MODULE_TARGET})
+cppcmake_helper_include_target(${MODULE_TARGET})
 
 target_include_directories(${MODULE_TARGET}
     PUBLIC
