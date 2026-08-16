@@ -177,3 +177,119 @@ function(cppcmake_gitsubmodule_init)
     endforeach()
 
 endfunction()
+
+function(cppcmake_gitsubmodule_init_missing_targets)
+    # =========================================================
+    # Summary
+    #
+    # Initializes Git submodules conditionally based on whether
+    # their associated CMake target already exists.
+    #
+    # Each PATH starts a new submodule entry. An optional TARGET
+    # may follow it. When TARGET exists, that submodule is skipped.
+    # A PATH without TARGET is always considered for initialization.
+    #
+    # Usage:
+    #
+    #   cppcmake_gitsubmodule_init_missing_targets(
+    #       WORKING_DIRECTORY
+    #           "${CMAKE_CURRENT_SOURCE_DIR}"
+    #
+    #       PATH
+    #           "extern/ScopeCanvas"
+    #       TARGET
+    #           "ScopeCanvas_engine_core"
+    #
+    #       PATH
+    #           "extern/CppDependencies"
+    #
+    #       PATH
+    #           "extern/ScopeCanvas.Editor"
+    #       TARGET
+    #           "SC_editor_text"
+    #   )
+    #
+    # Parameters:
+    #   WORKING_DIRECTORY - Any directory inside the owning Git
+    #                       repository.
+    #
+    #   PATH              - Starts a submodule entry.
+    #
+    #   TARGET            - Optional CMake target associated with
+    #                       the preceding PATH. When already present,
+    #                       the submodule is not initialized.
+    # =========================================================
+
+    set(_working_directory)
+    set(_submodules)
+    set(_path)
+    set(_target)
+    set(_mode)
+
+    foreach(_arg IN LISTS ARGN)
+        if(_arg STREQUAL "WORKING_DIRECTORY")
+            set(_mode WORKING_DIRECTORY)
+
+        elseif(_arg STREQUAL "PATH")
+            if(_path)
+                if(NOT _target OR NOT TARGET "${_target}")
+                    list(APPEND _submodules "${_path}")
+                endif()
+            endif()
+
+            set(_path)
+            set(_target)
+            set(_mode PATH)
+
+        elseif(_arg STREQUAL "TARGET")
+            if(NOT _path)
+                message(FATAL_ERROR
+                    "CPPCMAKE_GITSUBMODULE_TARGET_WITHOUT_PATH: TARGET requires a preceding PATH."
+                )
+            endif()
+
+            set(_mode TARGET)
+
+        elseif(_mode STREQUAL "WORKING_DIRECTORY")
+            set(_working_directory "${_arg}")
+            set(_mode)
+
+        elseif(_mode STREQUAL "PATH")
+            set(_path "${_arg}")
+            set(_mode)
+
+        elseif(_mode STREQUAL "TARGET")
+            set(_target "${_arg}")
+            set(_mode)
+
+        else()
+            message(FATAL_ERROR
+                "CPPCMAKE_GITSUBMODULE_ARGUMENT_INVALID: Unexpected argument '${_arg}'."
+            )
+        endif()
+    endforeach()
+
+    if(_path)
+        if(NOT _target OR NOT TARGET "${_target}")
+            list(APPEND _submodules "${_path}")
+        endif()
+    endif()
+
+    if(NOT _working_directory)
+        message(FATAL_ERROR
+            "CPPCMAKE_GITSUBMODULE_WORKING_DIRECTORY_MISSING: WORKING_DIRECTORY is required."
+        )
+    endif()
+
+    if(NOT _submodules)
+        return()
+    endif()
+
+    cppcmake_gitsubmodule_init(
+        QUIET
+        WORKING_DIRECTORY
+            "${_working_directory}"
+        PATH
+            ${_submodules}
+    )
+endfunction()

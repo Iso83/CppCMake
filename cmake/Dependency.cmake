@@ -3,8 +3,12 @@ include_guard(GLOBAL)
 include(FetchContent)
 
 # =========================================================
-# Internal helper
+# Internal helpers
 # =========================================================
+
+function(_cppcmake_dependency_summary message_text)
+    message(STATUS "CppCMake dependencies: ${message_text}")
+endfunction()
 
 function(_cppcmake_dependency_collect_targets TARGETS)
     # =========================================================
@@ -60,12 +64,10 @@ function(_cppcmake_dependency_collect_directory_targets directory TARGETS)
     )
 
     foreach(subdirectory IN LISTS subdirectories)
-
         _cppcmake_dependency_collect_directory_targets(
             "${subdirectory}"
             targets
         )
-
     endforeach()
 
     set(${TARGETS}
@@ -89,7 +91,6 @@ function(_cppcmake_dependency_organize_targets targets_before)
     _cppcmake_dependency_collect_targets(TARGETS_AFTER)
 
     foreach(target IN LISTS TARGETS_AFTER)
-
         list(FIND targets_before "${target}" target_index)
 
         if(target_index GREATER_EQUAL 0)
@@ -111,12 +112,11 @@ function(_cppcmake_dependency_organize_targets targets_before)
             PROPERTY FOLDER
             "${CPPCMAKE_PROJECT_IDE_THIRD_PARTY_FOLDER}/${target}"
         )
-
     endforeach()
 endfunction()
 
 # =========================================================
-# Public API
+# FetchContent
 # =========================================================
 
 macro(cppcmake_dependency_make_available)
@@ -146,6 +146,10 @@ macro(cppcmake_dependency_make_available)
     _cppcmake_dependency_organize_targets("${TARGETS_BEFORE}")
 endmacro()
 
+# =========================================================
+# Subdirectories
+# =========================================================
+
 function(cppcmake_dependency_add_subdirectory)
     # =========================================================
     # Summary
@@ -168,6 +172,42 @@ function(cppcmake_dependency_add_subdirectory)
     _cppcmake_dependency_organize_targets("${TARGETS_BEFORE}")
 endfunction()
 
+function(cppcmake_dependency_add_subdirectory_unless_target target)
+    # =========================================================
+    # Summary
+    #
+    # Adds a dependency subdirectory only when the specified
+    # CMake target does not already exist.
+    #
+    # Newly created targets are automatically placed inside
+    # the project's third_party IDE folder.
+    #
+    # Parameters:
+    #   [in] target - Existing target that indicates the
+    #                 dependency is already available.
+    #
+    # Remaining arguments are passed to
+    # cppcmake_dependency_add_subdirectory().
+    #
+    # Usage:
+    #
+    #   cppcmake_dependency_add_subdirectory_unless_target(
+    #       ScopeCanvas_engine_core
+    #       extern/ScopeCanvas
+    #   )
+    # =========================================================
+
+    if(TARGET "${target}")
+        return()
+    endif()
+
+    cppcmake_dependency_add_subdirectory(${ARGN})
+endfunction()
+
+# =========================================================
+# Target organization
+# =========================================================
+
 function(cppcmake_dependency_set_folder target folder)
     # =========================================================
     # Summary
@@ -179,13 +219,78 @@ function(cppcmake_dependency_set_folder target folder)
     #   [in] folder - Folder relative to the project's
     #                 third_party IDE folder.
     # =========================================================
-    if(TARGET ${target})
 
+    if(TARGET ${target})
         set_property(
             TARGET ${target}
             PROPERTY FOLDER
             "${CPPCMAKE_PROJECT_IDE_THIRD_PARTY_FOLDER}/${folder}"
         )
-
     endif()
+endfunction()
+
+# =========================================================
+# Local packages
+# =========================================================
+
+set(
+    CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE
+    ""
+    CACHE FILEPATH
+    "Optional local dependency package configuration"
+)
+
+function(cppcmake_dependency_try_local_packages)
+    # =========================================================
+    # Summary
+    #
+    # Loads an optional machine-local dependency package
+    # configuration before resolving project dependencies.
+    #
+    # The configuration may extend CMAKE_PREFIX_PATH and
+    # provide package-specific helpers for prebuilt libraries.
+    # When no configuration file is specified or available,
+    # dependency resolution continues normally.
+    #
+    # Configuration:
+    #   CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE
+    #       Path to the optional local package configuration.
+    #
+    # Usage:
+    #
+    #   cppcmake_dependency_try_local_packages()
+    #
+    # Example:
+    #
+    #   cmake -S . -B build
+    #       -DCPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE=<file>
+    # =========================================================
+
+    if(NOT CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE)
+        _cppcmake_dependency_summary(
+            "local package configuration disabled"
+        )
+        return()
+    endif()
+
+    if(NOT EXISTS "${CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE}")
+        _cppcmake_dependency_summary(
+            "local package configuration unavailable: "
+            "${CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE}"
+        )
+        return()
+    endif()
+
+    _cppcmake_dependency_summary(
+        "using local package configuration: "
+        "${CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE}"
+    )
+
+    include("${CPPCMAKE_DEPENDENCY_LOCAL_PACKAGE_FILE}")
+
+    set(
+        CMAKE_PREFIX_PATH
+        "${CMAKE_PREFIX_PATH}"
+        PARENT_SCOPE
+    )
 endfunction()
