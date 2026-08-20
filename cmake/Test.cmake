@@ -40,6 +40,7 @@ function(cppcmake_test_add)
     #   - Linking the target library.
     #   - Registering the executable with CTest.
     #   - Assigning the test to the configured IDE folder.
+    #   - Optionally assigning CTest labels.
     #   - Optionally linking additional libraries.
     #   - Optionally adding include directories.
     #   - Optionally adding compile definitions.
@@ -51,6 +52,7 @@ function(cppcmake_test_add)
     #   [in] TARGET              - Target library under test.
     #   [in] SOURCES             - Test source files.
     #   [in] MODULE              - Optional module name used for the IDE folder.
+    #   [in] LABELS              - Optional CTest labels.
     #   [in] LINK_LIBRARIES      - Optional additional libraries to link.
     #   [in] INCLUDE_DIRECTORIES - Optional include directories.
     #   [in] COMPILE_DEFINITIONS - Optional compile definitions.
@@ -70,7 +72,7 @@ function(cppcmake_test_add)
         ARG
         ""
         "NAME;TARGET;MODULE"
-        "SOURCES;LINK_LIBRARIES;INCLUDE_DIRECTORIES;COMPILE_DEFINITIONS"
+        "SOURCES;LABELS;LINK_LIBRARIES;INCLUDE_DIRECTORIES;COMPILE_DEFINITIONS"
         ${ARGN}
     )
 
@@ -125,6 +127,14 @@ function(cppcmake_test_add)
         NAME ${ARG_NAME}
         COMMAND ${ARG_NAME}
     )
+
+    if(ARG_LABELS)
+        set_tests_properties(
+            ${ARG_NAME}
+            PROPERTIES
+                LABELS "${ARG_LABELS}"
+        )
+    endif()
 
     set(test_ide_folder "tests")
 
