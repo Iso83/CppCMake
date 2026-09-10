@@ -1,5 +1,7 @@
 include_guard(GLOBAL)
 
+include("${CMAKE_CURRENT_LIST_DIR}/Dependency.cmake")
+
 macro(cppcmake_test_setup)
     # =========================================================
     # Summary
@@ -44,6 +46,7 @@ function(cppcmake_test_add)
     #   - Optionally linking additional libraries.
     #   - Optionally adding include directories.
     #   - Optionally adding compile definitions.
+    #   - Deploying runtime dependencies next to the test executable.
     #
     # If project test support is disabled, no changes are made.
     #
@@ -151,4 +154,6 @@ function(cppcmake_test_add)
         TARGET ${ARG_NAME}
         PROPERTY FOLDER "${TEST_IDE_FOLDER}"
     )
+
+    cppcmake_dependency_copy_runtime(${ARG_NAME})
 endfunction()

@@ -294,3 +294,43 @@ function(cppcmake_dependency_try_local_packages)
         PARENT_SCOPE
     )
 endfunction()
+
+function(cppcmake_dependency_copy_runtime TARGET)
+    # =========================================================
+    # Summary
+    #
+    # Copies all runtime DLL dependencies next to a target.
+    #
+    # Parameters:
+    #   [in] TARGET - Executable or shared library target.
+    # =========================================================
+
+    if(NOT TARGET ${TARGET})
+        message(FATAL_ERROR
+            "cppcmake_dependency_copy_runtime: "
+            "target '${TARGET}' does not exist."
+        )
+    endif()
+
+    get_target_property(target_type ${TARGET} TYPE)
+
+    if(NOT target_type MATCHES "^(EXECUTABLE|SHARED_LIBRARY|MODULE_LIBRARY)$")
+        message(FATAL_ERROR
+            "cppcmake_dependency_copy_runtime: "
+            "target '${TARGET}' must be an executable, shared library, or module library."
+        )
+    endif()
+
+    if(NOT WIN32)
+        return()
+    endif()
+
+    add_custom_command(
+        TARGET ${TARGET}
+        POST_BUILD
+        COMMAND
+            "$<$<BOOL:$<TARGET_RUNTIME_DLLS:${TARGET}>>:${CMAKE_COMMAND};-E;copy_if_different;$<TARGET_RUNTIME_DLLS:${TARGET}>;$<TARGET_FILE_DIR:${TARGET}>>"
+        COMMAND_EXPAND_LISTS
+        VERBATIM
+    )
+endfunction()
